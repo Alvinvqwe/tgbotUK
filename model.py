@@ -49,6 +49,8 @@ def authByUsername(username):
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
+
+# users
 @handle_exception
 def user_update(chat_id, username=None, firstname=None, lastname=None, isRegister=False):
 	p_ls = []
@@ -71,6 +73,98 @@ def user_update(chat_id, username=None, firstname=None, lastname=None, isRegiste
 	with conn.cursor() as cursor:
 		cursor.execute(sql)
 	conn.commit()
+
+
+@handle_exception
+def user_add(idemployee, chatid=None, username, departmentID=0, firstname, lastname=None, isAdmin=0, lang="en"):
+	if not idemployee or not username:
+		return -1
+	sql = f'INSERT INTO tgbotUK.employee (idemployee, chatid, username, departmentID, firstname, lastname, isAdmin, lang) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'%(idemployee, chatid, username, departmentID, firstname, lastname, isAdmin, lang)
+	with conn.cursor() as cursor:
+		cursor.execute(sql)
+	conn.commit()
+	return 1
+
+
+@handle_exception
+def remove(idemployee):
+	if not idemployee: return -1
+	sql = f'DELETE FROM tgbotUK.employee WHERE idemployee="%s"'%idemployee
+	with conn.cursor() as cursor:
+		cursor.execute(sql)
+	conn.commit()
+	return 1
+
+@handle_exception
+def user_list(department_id=-1):
+	sql = f'SELECT * FROM tgbotUK.employee'
+	if department_id:
+		sql = f'SELECT * FROM tgbotUK.employee where department_id=%s'%department_id
+	with conn.cursor() as cursor:
+		return cursor.execute(sql), cursor.fetchall()
+
+@handle_exception
+def department_list(department_id=-1):
+	sql = f'SELECT * FROM tgbotUK.department'
+	if department_id:
+		sql = f'SELECT * FROM tgbotUK.department where department_id=%s'%department_id
+	with conn.cursor() as cursor:
+		return cursor.execute(sql), cursor.fetchall()
+
+# post
+@handle_exception
+def add_post(ctx, type_=0, date, attaches=None, publisher_chatid):
+	if not ctx or not date or not publisher_chatid: return -1
+	sql = f'INSERT INTO tgbotUK.posts (content, type, date, attaches, publisher_chatid) VALUES (%s, %s, %s, %s, %s)'%(ctx, type_, date, attaches, publisher_chatid)
+	with conn.cursor() as cursor:
+		cursor.execute(sql)
+	conn.commit()
+	return 1
+
+@handle_exception
+def posts_list(num=0):
+	sql = f'SELECT * FROM tgbotUK.posts'
+	if num:
+		sql = f'SELECT * FROM tgbotUK.posts ORDER BY timestamp DESC LIMIT %s'%num
+	with conn.cursor() as cursor:
+		return cursor.execute(sql), cursor.fetchall()
+
+# clocks
+@handle_exception
+def clock_check(idemployee, range_="day"):
+	if not idemployee: return -1
+	sql = f'SELECT * FROM tgbotUK.clocks where employeeID=%s and TO_DAYS(clockin) = TO_DAYS(NOW())'%idemployee
+	if range_ == "month":
+		sql = f'SELECT * FROM tgbotUK.clocks where employeeID=%s and DATE_FORMAT(clockin, "%Y%m")=DATE_FORMAT(CURDATE(), "%Y%m")'%idemployee
+	with conn.cursor() as cursor:
+		return cursor.execute(sql), cursor.fetchall()
+
+@handle_exception
+def clocks_report(department_id=0, range_="day"):
+	sql = ""
+	if not department_id:
+		sql = f'SELECT * FROM tgbotUK.clocks where TO_DAYS(clockin) = TO_DAYS(NOW())'
+		if sql == "month":
+			sql = f'SELECT * FROM tgbotUK.clocks where DATE_FORMAT(clockin, "%Y%m")=DATE_FORMAT(CURDATE(), "%Y%m")'
+	else:
+		sql = f'SELECT * FROM tgbotUK.clocks c, tgbotUK.employee e where e.departmentID=%s and TO_DAYS(clockin) = TO_DAYS(NOW())'%department_id
+		if sql == "month":
+			f'SELECT * FROM tgbotUK.clocks c, tgbotUK.employee e where e.departmentID=%s and DATE_FORMAT(c.clockin, "%Y%m") = DATE_FORMAT( CURDATE( ) , "%Y%m" )'%department_id
+	with conn.cursor() as cursor:
+		return cursor.execute(sql), cursor.fetchall()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -195,7 +195,70 @@ menu = [
 					"cn": "打卡管理"
 					},
 				"id": "41", 
-				"submenu": [],
+				"submenu": [
+					{
+						"display": {
+							"en": "monthly history",
+							"cn": "本月记录"
+							},
+						"id": "410", 
+						"submenu": [
+							{
+								"display": {
+									"en": "by department",
+									"cn": "按部门查询"
+									},
+								"id": "4100", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "all departments",
+									"cn": "所有查询"
+									},
+								"id": "4101", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+						],
+						"link": "",
+						"Enable": True
+					},
+					{
+						"display": {
+							"en": "daily history",
+							"cn": "本日记录"
+							},
+						"id": "411", 
+						"submenu": [
+							{
+								"display": {
+									"en": "by department",
+									"cn": "按部门查询"
+									},
+								"id": "4110", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "all departments",
+									"cn": "所有查询"
+									},
+								"id": "4111", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+						],
+						"link": "",
+						"Enable": True
+					},
+				],
 				"link": "",
 				"Enable": True
 			},

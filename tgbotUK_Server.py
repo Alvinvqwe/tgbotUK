@@ -147,7 +147,7 @@ async def menu_callback(call: types.CallbackQuery):
 	if not res_: 
 		await bot.send_message(call.message.chat.id, text=config.lang[dics[message.text]]["lang_set_succeed"])
 		return;
-	# isAdmin = isAdmin(data=call)
+	isAdmin = isAdmin(data=call)
 	callback_data: dict = func_menu.parse(callback_data=call.data)
 
 	menu_id = int(callback_data['menu_id'])
@@ -166,10 +166,17 @@ async def menu_callback(call: types.CallbackQuery):
 			raise e
 		# finally:
 		await bot.send_message(call.message.chat.id, text=config.lang[dics[res]]["lang_set_succeed"])
+		# update the keyboard
+		title, cfg = render_menu(res[:-1], action=0, lang_set=lang, isAdmin=isAdmin)
+		back = 0 if title in [config.lang["cn"]["menu"], config.lang["en"]["menu"]] else 1
+		keyboard = menu_keyboard(config=cfg, index=index, lang=dics[res], back=back, action=0)
+		await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+						text=title, reply_markup=keyboard)
 
 	# clock
 	elif res in ["00"]:
-		web_app = types.WebAppInfo(url='https://127.0.0.1:3000?'+"chatid="+str(call.message.chat.id))
+		web_app = types.WebAppInfo(url='https://217.146.82.143?'+"chatid="+str(call.message.chat.id))
+		print(web_app)
 		button_c_in = types.InlineKeyboardButton('clock', web_app=web_app)
 		keyboard = types.InlineKeyboardMarkup()
 		keyboard.add(button_c_in)
@@ -178,8 +185,14 @@ async def menu_callback(call: types.CallbackQuery):
 	# posts
 	elif res in ["10", "11"]:
 		# 10 latest
+		if res == "10":
+			res = model.posts_list(num=1)
+			await bot.send_message(call.message.chat.id, text=res[0]["content"] + "\n\n" + res[0]["date"])
 		# 11 history
-		pass
+		if res == "11":
+			res = model.posts_list(num=5)
+			for i in res:
+				await bot.send_message(call.message.chat.id, text=i["content"] + "\n" + i["date"])
 
 	# 问题举报
 	elif res in ["20", "22"]:
@@ -188,7 +201,13 @@ async def menu_callback(call: types.CallbackQuery):
 	################
 	# admin section
 	################
-	elif res in ["40", "41", "42", "43"]:
+	elif res in ["40", "41", "43"]:
+		pass
+
+	elif res in ["420", "421"]:
+		pass
+
+	elif res in ["430", "431", "432", "4330"]:
 		pass
 
 	else:
@@ -257,31 +276,6 @@ async def menu_command_handler(message: types.Message):
 		cfg[4]["Enable"] = True
 	await bot.send_message(message.chat.id, text=config.lang[user["lang"]]["menu"], 
 		reply_markup=menu_keyboard(config=cfg, index="0", lang=user["lang"], back=0))
-
-
-# 打卡功能
-# 调动 webapp
-# nodejs -> mysql 打卡写入
-# 1 hrs
-
-
-
-
-# 打卡查询功能
-# 1 hrs
-
-
-@bot.message_handler(commands=['clock_in'])
-async def send_id(message):
-    web_app = types.WebAppInfo(url='https://www.youtube.com/watch?v=EDH6DsoKs1I')
-    button_c_in = types.InlineKeyboardButton('clock in', web_app=web_app)
-    chat_id = message.chat.id
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(button_c_in)
-    await bot.send_message(chat_id, text='please clock in through the link', reply_markup=keyboard)
-
-
-
 
 
 
