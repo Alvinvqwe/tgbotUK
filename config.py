@@ -12,19 +12,52 @@ database = {
 	"charset": "utf8mb4"
 }
 
+chatID_ls = {
+	"IT_support": "",
+}
 
 lang = {
 	"cn": {
 		"menu": "菜单",
 		"auth_faild": "很抱歉，该机器人仅服务内部员工使用，如有疑问，请联系 Mario in London@Mariolondon",
 		"lang_set_succeed": "设置语言成功",
-		"auth_admin_faild": "很抱歉，您不是管理员，无法使用管理员功能，如有疑问，请联系 Mario in London@Mariolondon"
+		"auth_admin_faild": "很抱歉，您不是管理员，无法使用管理员功能，如有疑问，请联系 Mario in London@Mariolondon",
+		"report_intro": "请使用 /makeAnReport_IT 命令 + 描述内容来反馈，相关工作人员会尽快联系您来解决该问题~",
+		"empty_warn": "描述内容为空，请按照格式输入",
+		"sys_err": "系统内部错误，请联系 @Alvin_name 反馈.",
+		"post_intro": "请使用 /makeAnPost 命令 + 发布内容",
+		"task_done": "已完成",
+		"add_user": "请使用 /add_user 命令 + 员工ID:TG的username:部门ID 格式来添加新员工，添加后请新员工关注 @xxx",
+		"department_ls": '''部门列表如下: (部门ID, 部门名称)
+'1','市场部'
+'2','后勤部'
+'3','行政部'
+'4','财务部'
+'5','审计部'
+'6','人事部'
+'7','赢创项目组'
+'8','德星项目组'
+'9','嘉华项目组'
+'10','天宇项目组'
+'11','Venus(Spring)'
+'12','Mirror' ''',
+		"remove_user": "",
+		"update_user": "",
 	},
 	"en": {
 		"menu": "menu",
 		"auth_faild": "Sorry, this bot service to employees only, if any questions, please contact to Mario in London@Mariolondon",
 		"lang_set_succeed": "Set the languange successful",
 		"auth_admin_faild": "Sorry, you are not administrator, if any questions, please contact to Mario in London@Mariolondon",
+		"report_intro": "please use command: /makeAnReport_IT + the issues description to report，we will sort it as fast as we can~",
+		"empty_warn": "the issues description is not valied, please input by following format",
+		"sys_err": "system error, please contact @Alvin_name to report."
+		"post_intro": "Please use command: /makeAnPost + the post content",
+		"task_done": "task done",
+		"add_user": "Please use command /add_user + employeeID:username:departmentID format to add new，then after added, please alert the new to follow @xxx",
+		"department_ls": "",
+		"remove_user": "",
+		"update_user": "",
 	}
 }
 
@@ -209,7 +242,108 @@ menu = [
 									"cn": "按部门查询"
 									},
 								"id": "4100", 
-								"submenu": [],
+								"submenu": [
+									{
+										"display": {
+											"en": "行政部",
+											"cn": "行政部"
+											},
+										"id": "41000", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "财务部",
+											"cn": "财务部"
+											},
+										"id": "41001", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "审计部",
+											"cn": "审计部"
+											},
+										"id": "41002", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "人事部",
+											"cn": "人事部"
+											},
+										"id": "41003", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "赢创项目组",
+											"cn": "赢创项目组"
+											},
+										"id": "41004", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "德星项目组",
+											"cn": "德星项目组"
+											},
+										"id": "41005", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "嘉华项目组",
+											"cn": "嘉华项目组"
+											},
+										"id": "41006", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "天宇项目组",
+											"cn": "天宇项目组"
+											},
+										"id": "41007", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "Venus(Spring)",
+											"cn": "Venus(Spring)"
+											},
+										"id": "41008", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "Mirror",
+											"cn": "Mirror"
+											},
+										"id": "41009", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+								],
 								"link": "",
 								"Enable": True
 							},
@@ -240,7 +374,108 @@ menu = [
 									"cn": "按部门查询"
 									},
 								"id": "4110", 
-								"submenu": [],
+								"submenu": [
+									{
+										"display": {
+											"en": "行政部",
+											"cn": "行政部"
+											},
+										"id": "41100", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "财务部",
+											"cn": "财务部"
+											},
+										"id": "41101", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "审计部",
+											"cn": "审计部"
+											},
+										"id": "41102", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "人事部",
+											"cn": "人事部"
+											},
+										"id": "41103", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "赢创项目组",
+											"cn": "赢创项目组"
+											},
+										"id": "41104", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "德星项目组",
+											"cn": "德星项目组"
+											},
+										"id": "41105", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "嘉华项目组",
+											"cn": "嘉华项目组"
+											},
+										"id": "41106", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "天宇项目组",
+											"cn": "天宇项目组"
+											},
+										"id": "41107", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "Venus(Spring)",
+											"cn": "Venus(Spring)"
+											},
+										"id": "41108", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+									{
+										"display": {
+											"en": "Mirror",
+											"cn": "Mirror"
+											},
+										"id": "41109", 
+										"submenu": [],
+										"link": "",
+										"Enable": True
+									},
+								],
 								"link": "",
 								"Enable": True
 							},
@@ -339,10 +574,110 @@ menu = [
 						"submenu": [
 							{
 								"display": {
-									"en": "department list",
-									"cn": "请选择部门"
+									"en": "all",
+									"cn": "所有部门"
 									},
 								"id": "4330", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "行政部",
+									"cn": "行政部"
+									},
+								"id": "4331", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "财务部",
+									"cn": "财务部"
+									},
+								"id": "4332", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "审计部",
+									"cn": "审计部"
+									},
+								"id": "4333", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "人事部",
+									"cn": "人事部"
+									},
+								"id": "4334", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "赢创项目组",
+									"cn": "赢创项目组"
+									},
+								"id": "4335", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "德星项目组",
+									"cn": "德星项目组"
+									},
+								"id": "4336", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "嘉华项目组",
+									"cn": "嘉华项目组"
+									},
+								"id": "4337", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "天宇项目组",
+									"cn": "天宇项目组"
+									},
+								"id": "4338", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "Venus(Spring)",
+									"cn": "Venus(Spring)"
+									},
+								"id": "4339", 
+								"submenu": [],
+								"link": "",
+								"Enable": True
+							},
+							{
+								"display": {
+									"en": "Mirror",
+									"cn": "Mirror"
+									},
+								"id": "433x", 
 								"submenu": [],
 								"link": "",
 								"Enable": True
