@@ -13,7 +13,7 @@ database = {
 }
 
 chatID_ls = {
-	"IT_support": "",
+	"IT_support": "6063741839",
 }
 
 lang = {
@@ -23,7 +23,7 @@ lang = {
 		"lang_set_succeed": "设置语言成功",
 		"auth_admin_faild": "很抱歉，您不是管理员，无法使用管理员功能，如有疑问，请联系 Mario in London@Mariolondon",
 		"report_intro": "请使用 /makeAnReport_IT 命令 + 描述内容来反馈，相关工作人员会尽快联系您来解决该问题~",
-		"empty_warn": "描述内容为空，请按照格式输入",
+		"empty_warn": "参数内容不合法，请按照格式输入",
 		"sys_err": "系统内部错误，请联系 @Alvin_name 反馈.",
 		"post_intro": "请使用 /makeAnPost 命令 + 发布内容",
 		"task_done": "已完成",
@@ -41,8 +41,10 @@ lang = {
 '10','天宇项目组'
 '11','Venus(Spring)'
 '12','Mirror' ''',
-		"remove_user": "",
-		"update_user": "",
+		"remove_user": "请使用 /remove_user + employeeID 命令来删除员工",
+		"update_user": "请使用 /update_user + username, employeeID:new_employeeID, departmentID:new_departmentID ... 格式来更新员工信息",
+		"check_user": "用户不存在, 请检查输入",
+		"params_err": "参数错误, 请重新输入"
 	},
 	"en": {
 		"menu": "menu",
@@ -50,14 +52,16 @@ lang = {
 		"lang_set_succeed": "Set the languange successful",
 		"auth_admin_faild": "Sorry, you are not administrator, if any questions, please contact to Mario in London@Mariolondon",
 		"report_intro": "please use command: /makeAnReport_IT + the issues description to report，we will sort it as fast as we can~",
-		"empty_warn": "the issues description is not valied, please input by following format",
-		"sys_err": "system error, please contact @Alvin_name to report."
+		"empty_warn": "the issues description is not valid, please input by following format",
+		"sys_err": "system error, please contact @Alvin_name to report.",
 		"post_intro": "Please use command: /makeAnPost + the post content",
 		"task_done": "task done",
 		"add_user": "Please use command /add_user + employeeID:username:departmentID format to add new，then after added, please alert the new to follow @xxx",
 		"department_ls": "",
-		"remove_user": "",
-		"update_user": "",
+		"remove_user": "Please use command /remove_user + employeeID format to remove",
+		"update_user": "Please use command /update_user + employeeID:new_employeeID, departmentID:new_departmentID ... format to update",
+		"check_user": "user is not exist, please check the input",
+		"params_err": "params not valid, please re-input by the format"
 	}
 }
 
@@ -85,8 +89,29 @@ menu = [
 					"en": "history", 
 					"cn": "打卡历史"
 					},
-				"id": "02", 
-				"submenu": [],
+				"id": "01", 
+				"submenu": [
+					{
+						"display": {
+							"en": "daily",
+							"cn": "本日"
+							},
+						"id": "011", 
+						"submenu": [],
+						"link": "",
+						"Enable": True
+					},
+					{
+						"display": {
+							"en": "monthly",
+							"cn": "本月"
+							},
+						"id": "012", 
+						"submenu": [],
+						"link": "",
+						"Enable": True
+					},
+				],
 				"link": "",
 				"Enable": True
 			}

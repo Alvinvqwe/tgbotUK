@@ -38,17 +38,31 @@ def auth_(chat_id, isAdmin=0):
 
 @handle_exception
 def lang_set(chat_id, lang):
+	if not chat_id or not lang: return 0
 	sql = 'update employee set lang="%s" where chatid="%s"'%(lang, chat_id)
 	with conn.cursor() as cursor:
 		cursor.execute(sql)
 	conn.commit()
+	return 1
 
 @handle_exception
 def authByUsername(username):
+	if not username: return 0
 	sql = 'select * from employee where username="%s"'%(username)
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
+
+@handle_exception
+def user_update_info(username, idemployee, departmentID=None):
+	if not username: return 0
+	sql = 'update employee set idemployee="%s" where username="%s"'%(idemployee, username)
+	if departmentID:
+		sql = 'update employee set idemployee="%s", departmentID="%s" where username="%s"'%(idemployee, departmentID, username)
+	with conn.cursor() as cursor:
+		cursor.execute(sql)
+	conn.commit()
+	return 1
 
 # users
 @handle_exception
@@ -56,11 +70,11 @@ def user_update(chat_id, username=None, firstname=None, lastname=None, isRegiste
 	p_ls = []
 	sql = 'update employee set '
 	sql_conditions = ""
-	if firstname: p_ls.append('firstname=%s'%firstname)
-	if lastname: p_ls.append('lastname=%s'%lastname)
+	if firstname: p_ls.append('firstname="%s"'%firstname)
+	if lastname: p_ls.append('lastname="%s"'%lastname)
 	if isRegister:
 		if not username:
-			return -1
+			return 0
 		p_ls.append('chatid="%s" '%chat_id)
 		sql_conditions = ' where username="%s"'%username
 	else:
@@ -69,17 +83,9 @@ def user_update(chat_id, username=None, firstname=None, lastname=None, isRegiste
 
 	if not p_ls:
 		return 0
-	sql = sql + " and ".join(p_ls) + sql_conditions
-	with conn.cursor() as cursor:
-		cursor.execute(sql)
-	conn.commit()
 
-
-@handle_exception
-def user_add(idemployee, username, firstname, departmentID=0, chatid=None, lastname=None, isAdmin=0, lang="en"):
-	if not idemployee or not username:
-		return -1
-	sql = f'INSERT INTO tgbotUK.employee (idemployee, chatid, username, departmentID, firstname, lastname, isAdmin, lang) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'%(idemployee, chatid, username, departmentID, firstname, lastname, isAdmin, lang)
+	sql = sql + ", ".join(p_ls) + sql_conditions
+	print(sql)
 	with conn.cursor() as cursor:
 		cursor.execute(sql)
 	conn.commit()
@@ -87,8 +93,20 @@ def user_add(idemployee, username, firstname, departmentID=0, chatid=None, lastn
 
 
 @handle_exception
+def user_add(idemployee, username, firstname=" ", departmentID=0, chatid=None, lastname=None, isAdmin=0, lang="en"):
+	if not idemployee or not username:
+		return 0
+	sql = f'INSERT INTO tgbotUK.employee (idemployee, chatid, username, departmentID, firstname, lastname, isAdmin, lang) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+	# print((idemployee, chatid, username, departmentID, firstname, lastname, isAdmin, lang))
+	with conn.cursor() as cursor:
+		cursor.execute(sql,(idemployee, chatid, username, departmentID, firstname, lastname, isAdmin, lang))
+	conn.commit()
+	return 1
+
+
+@handle_exception
 def remove(idemployee):
-	if not idemployee: return -1
+	if not idemployee: return 0
 	sql = f'DELETE FROM tgbotUK.employee WHERE idemployee="%s"'%idemployee
 	with conn.cursor() as cursor:
 		cursor.execute(sql)
@@ -114,7 +132,7 @@ def department_list(department_id=-1):
 # post
 @handle_exception
 def add_post(ctx, date, publisher_chatid, type_=0, attaches=None):
-	if not ctx or not date or not publisher_chatid: return -1
+	if not ctx or not date or not publisher_chatid: return 0
 	sql = f'INSERT INTO tgbotUK.posts (content, type, date, attaches, publisher_chatid) VALUES (%s, %s, %s, %s, %s)'%(ctx, type_, date, attaches, publisher_chatid)
 	with conn.cursor() as cursor:
 		cursor.execute(sql)
@@ -125,17 +143,18 @@ def add_post(ctx, date, publisher_chatid, type_=0, attaches=None):
 def posts_list(num=0):
 	sql = f'SELECT * FROM tgbotUK.posts'
 	if num:
-		sql = f'SELECT * FROM tgbotUK.posts ORDER BY timestamp DESC LIMIT %s'%num
+		sql = f'SELECT * FROM tgbotUK.posts ORDER BY date DESC LIMIT {num}'
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
 # clocks
 @handle_exception
 def clock_check(idemployee, range_="day"):
-	if not idemployee: return -1
-	sql = f'SELECT * FROM tgbotUK.clocks where employeeID=%s and TO_DAYS(clockin) = TO_DAYS(NOW())'%idemployee
+	print("get in", idemployee)
+	if not idemployee: return 0, None
+	sql = f'''SELECT o.officeName, c.clockin, c.clockout FROM tgbotUK.clocks c LEFT JOIN tgbotUK.office o ON o.IPs LIKE CONCAT('%', c.IP, '%') WHERE employeeID="{idemployee}" and TO_DAYS(c.clockin) = TO_DAYS(NOW());'''
 	if range_ == "month":
-		sql = f'SELECT * FROM tgbotUK.clocks where employeeID=%s and DATE_FORMAT(clockin, "%Y%m")=DATE_FORMAT(CURDATE(), "%Y%m")'%idemployee
+		sql = f'''SELECT o.officeName, c.clockin, c.clockout FROM tgbotUK.clocks c LEFT JOIN tgbotUK.office o ON o.IPs LIKE CONCAT('%', c.IP, '%') WHERE employeeID="{idemployee}" and DATE_FORMAT(clockin, "%Y%m") = DATE_FORMAT(CURDATE(), "%Y%m");'''
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
@@ -159,13 +178,13 @@ def clocks_report(department_id=0, range_="day"):
 			FROM tgbotUK.clocks c 
 			LEFT JOIN tgbotUK.employee e ON e.idemployee = c.employeeID 
 			LEFT JOIN tgbotUK.office o ON o.IPs LIKE CONCAT('%', c.IP, '%')
-			WHERE e.departmentID=%s and TO_DAYS(c.clockin) = TO_DAYS(NOW());'''%department_id
+			WHERE e.departmentID={department_id} and TO_DAYS(c.clockin) = TO_DAYS(NOW());'''
 		if range_ == "month":
 			sql == f'''SELECT c.employeeID, c.clockin, c.clockout, e.username, o.officeName
 					FROM tgbotUK.clocks c 
 					LEFT JOIN tgbotUK.employee e ON e.idemployee = c.employeeID 
 					LEFT JOIN tgbotUK.office o ON o.IPs LIKE CONCAT('%', c.IP, '%')
-					WHERE e.departmentID=%s and DATE_FORMAT(clockin, "%Y%m")=DATE_FORMAT(CURDATE(), "%Y%m");'''%department_id
+					WHERE e.departmentID={department_id} and DATE_FORMAT(clockin, "%Y%m")=DATE_FORMAT(CURDATE(), "%Y%m");'''
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
@@ -174,7 +193,7 @@ def clocks_report(department_id=0, range_="day"):
 def report_list(idemployee=None):
 	sql = f"SELECT * FROM tgbotUK.report"
 	if idemployee:
-		sql = f"SELECT * FROM tgbotUK.report where r_employeeID=%s"%idemployee
+		sql = f'SELECT * FROM tgbotUK.report where r_employeeID="{idemployee}"'
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
@@ -182,10 +201,10 @@ def report_list(idemployee=None):
 # type: 0:IT, 1:other
 @handle_exception
 def make_report(idemployee, content, date, type_=0):
-	if not idemployee: return -1;
-	sql = f'INSERT INTO tgbotUK.report (r_employeeID, type, content, attaches, date) VALUES (%s, %s, %s, %s, %s)'%(idemployee, type_, content, None, date)
+	if not idemployee: return 0;
+	sql = f'INSERT INTO tgbotUK.report (r_employeeID, type, content, attaches, date) VALUES (%s, %s, %s, %s, %s)'
 	with conn.cursor() as cursor:
-		cursor.execute(sql)
+		cursor.execute(sql, (idemployee, type_, content, None, date))
 	conn.commit()
 	return 1
 

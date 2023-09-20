@@ -6,7 +6,7 @@ from telebot.asyncio_handler_backends import State, StatesGroup
 from telebot import types
 import model
 import config
-from datetime import date
+from datetime import datetime
 
 class employeeStates(StatesGroup):
 	# statesgroup should contain states
@@ -18,10 +18,11 @@ class employeeStates(StatesGroup):
 bot = AsyncTeleBot(config.TELEBOT_BOT_TOKEN, state_storage=StateMemoryStorage())
 
 # authorication
-def auth(data):
+async def auth(data):
 	# check chatid
 	chat_id = data.from_user.id
 	res, user_ = model.auth_(chat_id)
+	# print(user_)
 	if not res:
 		res_, data_ = model.authByUsername(data.from_user.username)
 		if res_:
@@ -36,11 +37,10 @@ def auth(data):
 			return True, user_[0]
 		else:
 			# users if not valid
-			bot.send_message(chat_id, text=config.lang["en"]["auth_faild"])
+			await bot.send_message(chat_id, text=config.lang["en"]["auth_faild"])
 			return None, None
 	else:
 		# check if username and firstname/lastname have been updated
-		# print(data.from_user)
 		username = data.from_user.username if data.from_user.username != user_[0]["username"] else None
 		firstname = data.from_user.first_name if data.from_user.first_name != user_[0]["firstname"] else None
 		lastname = data.from_user.last_name if data.from_user.last_name != user_[0]["lastname"] else None
@@ -56,12 +56,12 @@ def auth(data):
 
 # admin
 # if so, Enable the section
-def isAdmin(data):
+async def isAdmin(data):
 	# check chatid
 	chat_id = data.from_user.id
 	res, user_ = model.auth_(chat_id, isAdmin=1)
 	if not res:
-		bot.send_message(chat_id, text=config.lang[user_[0]["lang"]]["auth_admin_faild"])
+		# await bot.send_message(chat_id, text=config.lang["en"]["auth_admin_faild"]+config.lang["cn"]["auth_admin_faild"])
 		return 0
 	return 1
 
@@ -144,7 +144,8 @@ class MenuCallbackFilter(AdvancedCustomFilter):
 # Any other menu items
 @bot.callback_query_handler(func=None, config=func_menu.filter())
 async def menu_callback(call: types.CallbackQuery):
-	res_, user = auth(data=call)
+	res_, user = await auth(data=call)
+	chat_id = call.message.chat.id
 	if not res_: 
 		await bot.send_message(call.message.chat.id, text=config.lang[dics[message.text]]["lang_set_succeed"])
 		return;
@@ -171,7 +172,7 @@ async def menu_callback(call: types.CallbackQuery):
 		# finally:
 		await bot.send_message(call.message.chat.id, text=config.lang[dics[res]]["lang_set_succeed"])
 		# update the keyboard
-		title, cfg = render_menu(res[:-1], action=0, lang_set=lang, isAdmin=isAdmin(data=call))
+		title, cfg = render_menu(res[:-1], action=0, lang_set=lang, isAdmin=await isAdmin(data=call))
 		back = 0 if title in [config.lang["cn"]["menu"], config.lang["en"]["menu"]] else 1
 		keyboard = menu_keyboard(config=cfg, index=res[:-1], lang=dics[res], back=back, action=0)
 		await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -186,21 +187,43 @@ async def menu_callback(call: types.CallbackQuery):
 		keyboard.add(button_c_in)
 		await bot.send_message(call.message.chat.id, text='clock link/打卡链接', reply_markup=keyboard)
 
+	elif res in ["011", "012"]:
+		range_ = "month" if res == "012" else "day"
+		tmp_res, data = model.clock_check(user["idemployee"], range_=range_)
+		print(tmp_res, data)
+		if not tmp_res:
+			# 无记录
+			await bot.send_message(call.message.chat.id, text="no records" + "/没有记录")
+		else:
+			reply_text = []
+			for i in data:
+				reply_text.append(i["officeName"] + ":\t" + str(i["clockin"]) + "\t" + str(i["clockout"]))
+			if not reply_text: 
+				reply_text=["no records/没有记录"]
+			await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
+
+
 	# posts
 	elif res in ["10", "11"]:
 		# 10 latest
 		if res == "10":
-			tmp_res = model.posts_list(num=1)
-			await bot.send_message(call.message.chat.id, text=tmp_res[0]["content"] + "\n\n" + tmp_res[0]["date"])
+			tmp_res, data = model.posts_list(num=1)
+			reply_text = []
+			for i in data:
+				reply_text.append(i["content"] + "\t" + str(tmp_res[0]["date"]))
+			if not reply_text: 
+				reply_text=["no records/没有记录"]
+			await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
+
 		# 11 history
 		if res == "11":
-			tmp_res = model.posts_list(num=5)
+			tmp_res, data = model.posts_list(num=5)
 			reply_text = []
-			for i in tmp_res:
-				reply_text.append(i["content"] + "\n" + i["date"])
+			for i in data:
+				reply_text.append(i["content"] + "\t" + str(i["date"]))
 			if not reply_text: 
-				reply_text=["no records", "没有记录"]
-			await bot.send_message(call.message.chat.id, text="------".join(reply_text))
+				reply_text=["no records/没有记录"]
+			await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
 
 	# report
 	elif res in ["20", "22"]:
@@ -210,13 +233,13 @@ async def menu_callback(call: types.CallbackQuery):
 
 		# search report history by employee
 		if res == "22":
-			tmp_res = model.report_list(call.message.chat.id)
+			tmp_res, data = model.report_list(user["idemployee"])
 			reply_text = []
-			for i in tmp_res:
-				reply_text.append(i["content"] + "\n" + i["date"])
+			for i in data:
+				reply_text.append(i["content"] + "\n" + str(i["date"]))
 			if not reply_text: 
-				reply_text=["no records", "没有记录"]
-			await bot.send_message(call.message.chat.id, text="------".join(reply_text))
+				reply_text=["no records/没有记录"]
+			await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
 
 	################
 	# admin section
@@ -231,7 +254,7 @@ async def menu_callback(call: types.CallbackQuery):
 			reply_text.append(i["employeeID"] + " " + i["username"] + "\n" + i["officeName"] + "\nCLOCK IN:" + i["clockin"] + "\nCLOCK OUT" + i["clockout"])
 		if not reply_text: 
 			reply_text=["no records", "没有记录"]
-		await bot.send_message(call.message.chat.id, text="------".join(reply_text))
+		await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
 
 	# search by monthly history for all
 	elif res == "4101":
@@ -241,7 +264,7 @@ async def menu_callback(call: types.CallbackQuery):
 			reply_text.append(i["employeeID"] + " " + i["username"] + "\n" + i["officeName"] + "\nCLOCK IN:" + i["clockin"] + "\nCLOCK OUT" + i["clockout"])
 		if not reply_text: 
 			reply_text=["no records", "没有记录"]
-		await bot.send_message(call.message.chat.id, text="------".join(reply_text))
+		await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
 
 	# by day
 	elif res in clock_code_d.keys():
@@ -251,7 +274,7 @@ async def menu_callback(call: types.CallbackQuery):
 			reply_text.append(i["employeeID"] + " " + i["username"] + "\n" + i["officeName"] + "\nCLOCK IN:" + i["clockin"] + "\nCLOCK OUT" + i["clockout"])
 		if not reply_text: 
 			reply_text=["no records", "没有记录"]
-		await bot.send_message(call.message.chat.id, text="------".join(reply_text))
+		await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
 
 	# search by daily history for all
 	elif res == "4111":
@@ -261,7 +284,7 @@ async def menu_callback(call: types.CallbackQuery):
 			reply_text.append(i["employeeID"] + " " + i["username"] + "\n" + i["officeName"] + "\nCLOCK IN:" + i["clockin"] + "\nCLOCK OUT" + i["clockout"])
 		if not reply_text: 
 			reply_text=["no records", "没有记录"]
-		await bot.send_message(call.message.chat.id, text="------".join(reply_text))
+		await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
 
 	elif res in ["40"]:
 		# report section
@@ -272,7 +295,7 @@ async def menu_callback(call: types.CallbackQuery):
 				reply_text.append(i["content"] + "\n" + i["date"])
 			if not reply_text: 
 				reply_text=["no records", "没有记录"]
-			await bot.send_message(call.message.chat.id, text="------".join(reply_text))
+			await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
 
 	# posts management section
 	elif res in ["420", "421"]:
@@ -289,7 +312,7 @@ async def menu_callback(call: types.CallbackQuery):
 				reply_text.append(i["content"] + "\n" + i["date"])
 			if not reply_text: 
 				reply_text=["no records", "没有记录"]
-			await bot.send_message(call.message.chat.id, text="------".join(reply_text))
+			await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
 			
 
 	elif res in ["430", "431", "432", "4330"]:
@@ -298,6 +321,7 @@ async def menu_callback(call: types.CallbackQuery):
 		if res == "430":
 			# /add_user
 			await bot.send_message(call.message.chat.id, text=config.lang[lang]["add_user"])
+			await bot.send_message(chat_id, text=config.lang["cn"]["department_ls"])
 
 		# remove
 		if res == "431":
@@ -308,8 +332,9 @@ async def menu_callback(call: types.CallbackQuery):
 		# update
 		if res == "432":
 			# user_update(chat_id, username=None, firstname=None, lastname=None, isRegister=False):
-			# /add_user
-			await bot.send_message(call.message.chat.id, text=config.lang[lang]["add_user"])
+			# /update_user
+			await bot.send_message(call.message.chat.id, text=config.lang[lang]["update_user"])
+			await bot.send_message(chat_id, text=config.lang["cn"]["department_ls"])
 
 		# check employees list by departments
 		if res in employees_ls.keys():
@@ -319,11 +344,11 @@ async def menu_callback(call: types.CallbackQuery):
 				reply_text.append(i["content"] + "\n" + i["date"])
 			if not reply_text: 
 				reply_text=["no records", "没有记录"]
-			await bot.send_message(call.message.chat.id, text="------".join(reply_text))
+			await bot.send_message(call.message.chat.id, text="------\n".join(reply_text))
 
 	else:
 		# direct to the section configs
-		title, cfg = render_menu(callback_data['menu_id'], action=1, lang_set=lang, isAdmin=isAdmin(data=call))
+		title, cfg = render_menu(callback_data['menu_id'], action=1, lang_set=lang, isAdmin=await isAdmin(data=call))
 		back = 0 if title in [config.lang["cn"]["menu"], config.lang["en"]["menu"]] else 1
 		keyboard = menu_keyboard(config=cfg, index=res, lang=lang, back=back, action=1)
 		await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -331,14 +356,14 @@ async def menu_callback(call: types.CallbackQuery):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("back"))
 async def menu_command_handler(message):
-	res_, user = auth(data=message)
+	res_, user = await auth(data=message)
 	if not res_: return;
 	res = message.data
 	# print(res)
 	lang = user["lang"]
 	index = res.split("_")[-1]
 	# get the section configs
-	title, cfg = render_menu(index, action=0, lang_set=lang, isAdmin=isAdmin)
+	title, cfg = render_menu(index, action=0, lang_set=lang, isAdmin=await isAdmin(data=message))
 	# print(cfg)
 	back = 0 if title in [config.lang["cn"]["menu"], config.lang["en"]["menu"]] else 1
 	keyboard = menu_keyboard(config=cfg, index=index, lang=user["lang"], back=back, action=0)
@@ -349,7 +374,7 @@ async def menu_command_handler(message):
 # lang set callback
 @bot.message_handler(content_types=["text"], func=lambda message: message.text in ["English", "中文"])
 async def lang_set(message):
-	res, user = auth(data=message)
+	res, user = await auth(data=message)
 	if not res: return;
 	chat_id = message.from_user.id
 	dics = {"English": "en", "中文": "cn"}
@@ -361,7 +386,8 @@ async def lang_set(message):
 	await bot.send_message(chat_id, text=config.lang[dics[message.text]]["lang_set_succeed"])
 	# send the funcs menu by lang selected
 	cfg = config.menu
-	if isAdmin(data=message):
+	res_tmp = await isAdmin(data=message)
+	if res_tmp:
 		cfg[4]["Enable"] = True
 	await bot.send_message(message.chat.id, text=config.lang[dics[message.text]]["menu"], 
 		reply_markup=menu_keyboard(config=cfg, index="0", lang=dics[message.text], back=0, action=1))
@@ -369,27 +395,46 @@ async def lang_set(message):
 
 ########################## 
 # commands list
-
 @bot.message_handler(commands=["update_user"])
 async def update_user_command_handler(message):
-	res, user = auth(data=message)
+	res, user = await auth(data=message)
 	if not res: return;
-	if not isAdmin(data=message): return;
+	if not await isAdmin(data=message): return;
 	chat_id = message.from_user.id
 	tmp_res = message.text.split()[1:]
 	if not tmp_res:
 		await bot.send_message(chat_id, text=config.lang[user["lang"]]["empty_warn"])
 	else:
-		user_init_info = " ".join(tmp_res).split(":")
-		# 获取 参数 list
-		pass
+		user_init_info = " ".join(tmp_res).split(",")
+		info_username = user_init_info.pop(0)
+		# check username if valid
+		user_res, user_info = model.authByUsername()
+		if not user_res:
+			await bot.send_message(chat_id, text=config.lang[user["lang"]]["check_user"])
+			return
+
+		# params
+		params_ls = {"employeeID": None, "departmentID": None}
+		for i in user_init_info:
+			params = i.split(":")
+			if len(params)!=2:
+				await bot.send_message(chat_id, text=config.lang[user["lang"]]["empty_warn"])
+				return
+			if params[0] in ["employeeID", "departmentID"]:
+				params_ls[params[0]] = params[1]
+
+		action_res = model.user_update_info(username=info_username, employeeID=params_ls["employeeID"], departmentID=params_ls["departmentID"])
+		if action_res:
+			await bot.send_message(chat_id, text=config.lang[user["lang"]]["task_done"])
+		else:
+			await bot.send_message(chat_id, text=config.lang[user["lang"]]["params_err"])
 
 
 @bot.message_handler(commands=["remove_user"])
 async def remove_user_command_handler(message):
-	res, user = auth(data=message)
+	res, user = await auth(data=message)
 	if not res: return;
-	if not isAdmin(data=message): return;
+	if not await isAdmin(data=message): return;
 	chat_id = message.from_user.id
 	tmp_res = message.text.split()[1:]
 	if not tmp_res:
@@ -403,9 +448,9 @@ async def remove_user_command_handler(message):
 
 @bot.message_handler(commands=["add_user"])
 async def add_user_command_handler(message):
-	res, user = auth(data=message)
+	res, user = await auth(data=message)
 	if not res: return;
-	if not isAdmin(data=message): return;
+	if not await isAdmin(data=message): return;
 	chat_id = message.from_user.id
 	tmp_res = message.text.split()[1:]
 	if not tmp_res:
@@ -416,16 +461,16 @@ async def add_user_command_handler(message):
 			await bot.send_message(chat_id, text=config.lang[user["lang"]]["empty_warn"])
 		else:
 			# user_add(idemployee, username, firstname, departmentID=0, chatid=None, lastname=None, isAdmin=0, lang="en"):
-			await bot.send_message(chat_id, text=config.lang["en"]["department_ls"])
-			model.add_user(idemployee=user_init_info[0], username=user_init_info[1], firstname=None, departmentID=user_init_info[2], chatid=None, lastname=None, isAdmin=0, lang="en")
+			# await bot.send_message(chat_id, text=config.lang["en"]["department_ls"])
+			model.user_add(idemployee=user_init_info[0], username=user_init_info[1], firstname=" ", departmentID=int(user_init_info[2]), chatid=None, lastname=None, isAdmin=0, lang="en")
 			# done alert msg
 			await bot.send_message(chat_id, text=config.lang[user["lang"]]["task_done"])
 
 @bot.message_handler(commands=["makeAnPost"])
 async def post_command_handler(message):
-	res, user = auth(data=message)
+	res, user = await auth(data=message)
 	if not res: return;
-	if not isAdmin(data=message): return;
+	if not await isAdmin(data=message): return;
 	chat_id = message.from_user.id
 	tmp_res = message.text.split()[1:]
 	if not tmp_res:
@@ -434,8 +479,8 @@ async def post_command_handler(message):
 		# save it into the database
 		content = " ".join(tmp_res)
 		# add_post(ctx, date, publisher_chatid, type_=0, attaches=None)
-		date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-		model.add_post(ctx=content, date, chat_id, type_=0, attaches=None)
+		date_ = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		model.add_post(ctx=content, date=date_, publisher_chatid=chat_id, type_=0, attaches=None)
 		user_ls = model.user_list()
 		for i in user_ls:
 			# transfer the msg the user group that selected
@@ -447,7 +492,7 @@ async def post_command_handler(message):
 
 @bot.message_handler(commands=["makeAnReport_IT"])
 async def reportIT_command_handler(message):
-	res, user = auth(data=message)
+	res, user = await auth(data=message)
 	if not res: return;
 	chat_id = message.from_user.id
 	tmp_res = message.text.split()[1:]
@@ -457,14 +502,15 @@ async def reportIT_command_handler(message):
 		# save it into the database
 		content = " ".join(tmp_res)
 		# (idemployee, content, date, type_=0)
-		date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-		model.make_report(user["idemployee"], content, date, type_=0)
+		date_ = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		model.make_report(user["idemployee"], content, date_, type_=0)
 		# transfer the msg to the chatid of Alvin
-		await bot.send_message(config.chatID_ls["IT_support"], text=content)
+		issues = [f'from {user["username"]}', content, f'report time: {date_}']
+		await bot.send_message(config.chatID_ls["IT_support"], text="\n".join(issues))
 
 @bot.message_handler(commands=['start'])
 async def greeting(message):
-	res, user = auth(data=message)
+	res, user = await auth(data=message)
 	if not res: return;
 	chat_id = message.from_user.id
 	keyboard = lang_set_keyboard()
@@ -472,10 +518,10 @@ async def greeting(message):
 
 @bot.message_handler(commands=['menu'])
 async def menu_command_handler(message: types.Message):
-	res, user = auth(data=message)
+	res, user = await auth(data=message)
 	if not res: return;
 	cfg = config.menu
-	if isAdmin(data=message):
+	if await isAdmin(data=message):
 		cfg[4]["Enable"] = True
 	await bot.send_message(message.chat.id, text=config.lang[user["lang"]]["menu"], 
 		reply_markup=menu_keyboard(config=cfg, index="0", lang=user["lang"], back=0))
