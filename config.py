@@ -1,5 +1,7 @@
 # tgbot host configurations
-TELEBOT_BOT_TOKEN = "6000416074:AAGD_1u1UaVIgn43Ld0BsGv1IpZcUc99qy8"
+# TELEBOT_BOT_TOKEN = "6000416074:AAGD_1u1UaVIgn43Ld0BsGv1IpZcUc99qy8"
+
+TELEBOT_BOT_TOKEN = "5841535252:AAHiWiDLxTGwXvX-OVt7pWX5UtI40uWcgjA"
 
 TGBOT_NAME = "tgbotUK"
 
@@ -40,9 +42,10 @@ lang = {
 '9','嘉华项目组'
 '10','天宇项目组'
 '11','Venus(Spring)'
-'12','Mirror' ''',
+'12','Mirror'
+'13','Project X' ''',
 		"remove_user": "请使用 /remove_user + employeeID 命令来删除员工",
-		"update_user": "请使用 /update_user + username, employeeID:new_employeeID, departmentID:new_departmentID ... 格式来更新员工信息",
+		"update_user": "请使用 /update_user [username] [employeeID:new_employeeID] [departmentID:new_departmentID] ... 格式来更新员工信息",
 		"check_user": "用户不存在, 请检查输入",
 		"params_err": "参数错误, 请重新输入"
 	},
@@ -59,7 +62,7 @@ lang = {
 		"add_user": "Please use command /add_user + employeeID:username:departmentID format to add new，then after added, please alert the new to follow @xxx",
 		"department_ls": "",
 		"remove_user": "Please use command /remove_user + employeeID format to remove",
-		"update_user": "Please use command /update_user + employeeID:new_employeeID, departmentID:new_departmentID ... format to update",
+		"update_user": "Please use command /update_user [username] [employeeID:new_employeeID] [departmentID:new_departmentID] ... format to update",
 		"check_user": "user is not exist, please check the input",
 		"params_err": "params not valid, please re-input by the format"
 	}

@@ -79,8 +79,12 @@ app.use(async (ctx) => {
           return;
         }
 
-        const time = datetime.format(new Date(), "YYYY-MM-DD HH:mm");
-        res["time"] = time;
+        // const time = datetime.format(new Date(), "YYYY-MM-DD HH:mm");
+        const now = new Date();
+        const targetTimezone = 'Europe/London';
+        const targetDatetime = now.toLocaleString('en-US', { timeZone: targetTimezone });
+        const formattedTime = sd.format(targetDatetime, 'YYYY-MM-DD HH:mm:ss');
+        res["time"] = formattedTime;
 
         const [clockRows] = await connection.query('SELECT * FROM tgbotUK.clocks WHERE employeeID = ? AND TO_DAYS(clockin) = TO_DAYS(NOW())', [res["employeeID"]]);
 

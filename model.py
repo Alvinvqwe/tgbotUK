@@ -78,7 +78,7 @@ def user_update(chat_id, username=None, firstname=None, lastname=None, isRegiste
 		p_ls.append('chatid="%s" '%chat_id)
 		sql_conditions = ' where username="%s"'%username
 	else:
-		if username: p_ls.append('username=%s'%username)
+		if username: p_ls.append('username="%s"'%username)
 		sql_conditions = ' where chatid="%s"'%chat_id
 
 	if not p_ls:
@@ -103,7 +103,6 @@ def user_add(idemployee, username, firstname=" ", departmentID=0, chatid=None, l
 	conn.commit()
 	return 1
 
-
 @handle_exception
 def remove(idemployee):
 	if not idemployee: return 0
@@ -115,9 +114,10 @@ def remove(idemployee):
 
 @handle_exception
 def user_list(department_id=-1):
-	sql = f'SELECT * FROM tgbotUK.employee'
-	if department_id:
-		sql = f'SELECT * FROM tgbotUK.employee where department_id=%s'%department_id
+	sql = f'SELECT e.idemployee, e.chatid, e.username, e.firstname, e.lastname, d.departmentName FROM tgbotUK.employee e LEFT JOIN tgbotUK.department d ON e.departmentID = d.iddepartment'
+	if department_id != -1:
+		sql += f' where e.departmentID="{department_id}"'
+	print(sql)
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
@@ -125,17 +125,18 @@ def user_list(department_id=-1):
 def department_list(department_id=-1):
 	sql = f'SELECT * FROM tgbotUK.department'
 	if department_id:
-		sql = f'SELECT * FROM tgbotUK.department where department_id=%s'%department_id
+		sql = f'SELECT * FROM tgbotUK.department where department_id="%s"'%department_id
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
 # post
 @handle_exception
-def add_post(ctx, date, publisher_chatid, type_=0, attaches=None):
-	if not ctx or not date or not publisher_chatid: return 0
-	sql = f'INSERT INTO tgbotUK.posts (content, type, date, attaches, publisher_chatid) VALUES (%s, %s, %s, %s, %s)'%(ctx, type_, date, attaches, publisher_chatid)
+def add_post(ctx, post_date, publisher_chatid, post_type=0, attaches=None):
+	if not ctx or not post_date or not publisher_chatid: return 0
+	sql = f'INSERT INTO tgbotUK.posts (content, post_type, post_date, attaches, publisher_chatid) VALUES ("%s", %s, %s, %s, "%s")'
+	print(sql%(ctx, post_type, post_date, attaches, publisher_chatid))
 	with conn.cursor() as cursor:
-		cursor.execute(sql)
+		cursor.execute(sql, (ctx, post_type, post_date, attaches, publisher_chatid))
 	conn.commit()
 	return 1
 
@@ -143,14 +144,13 @@ def add_post(ctx, date, publisher_chatid, type_=0, attaches=None):
 def posts_list(num=0):
 	sql = f'SELECT * FROM tgbotUK.posts'
 	if num:
-		sql = f'SELECT * FROM tgbotUK.posts ORDER BY date DESC LIMIT {num}'
+		sql = f'SELECT * FROM tgbotUK.posts ORDER BY post_date DESC LIMIT {num}'
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
 # clocks
 @handle_exception
 def clock_check(idemployee, range_="day"):
-	print("get in", idemployee)
 	if not idemployee: return 0, None
 	sql = f'''SELECT o.officeName, c.clockin, c.clockout FROM tgbotUK.clocks c LEFT JOIN tgbotUK.office o ON o.IPs LIKE CONCAT('%', c.IP, '%') WHERE employeeID="{idemployee}" and TO_DAYS(c.clockin) = TO_DAYS(NOW());'''
 	if range_ == "month":
@@ -178,13 +178,14 @@ def clocks_report(department_id=0, range_="day"):
 			FROM tgbotUK.clocks c 
 			LEFT JOIN tgbotUK.employee e ON e.idemployee = c.employeeID 
 			LEFT JOIN tgbotUK.office o ON o.IPs LIKE CONCAT('%', c.IP, '%')
-			WHERE e.departmentID={department_id} and TO_DAYS(c.clockin) = TO_DAYS(NOW());'''
+			WHERE e.departmentID="{department_id}" and TO_DAYS(c.clockin) = TO_DAYS(NOW());'''
 		if range_ == "month":
-			sql == f'''SELECT c.employeeID, c.clockin, c.clockout, e.username, o.officeName
+			sql = f'''SELECT c.employeeID, c.clockin, c.clockout, e.username, o.officeName
 					FROM tgbotUK.clocks c 
 					LEFT JOIN tgbotUK.employee e ON e.idemployee = c.employeeID 
 					LEFT JOIN tgbotUK.office o ON o.IPs LIKE CONCAT('%', c.IP, '%')
-					WHERE e.departmentID={department_id} and DATE_FORMAT(clockin, "%Y%m")=DATE_FORMAT(CURDATE(), "%Y%m");'''
+					WHERE e.departmentID="{department_id}" and DATE_FORMAT(clockin, "%Y%m")=DATE_FORMAT(CURDATE(), "%Y%m");'''
+	# print(department_id, range_, sql)
 	with conn.cursor() as cursor:
 		return cursor.execute(sql), cursor.fetchall()
 
