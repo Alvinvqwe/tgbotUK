@@ -62,8 +62,8 @@ async def isAdmin(data):
 	res, user_ = model.auth_(chat_id, isAdmin=1)
 	if not res:
 		# await bot.send_message(chat_id, text=config.lang["en"]["auth_admin_faild"]+config.lang["cn"]["auth_admin_faild"])
-		return 0
-	return 1
+		return False
+	return True
 
 
 # default commands list
@@ -192,9 +192,10 @@ async def menu_callback(call: types.CallbackQuery):
 	elif res in ["011", "012"]:
 		range_ = "month" if res == "012" else "day"
 		tmp_res, data = model.clock_check(user["idemployee"], range_=range_)
+
 		if not tmp_res:
 			# 无记录
-			await bot.send_message(call.message.chat.id, text="no records" + "/没有记录")
+			await bot.send_message(call.message.chat.id, text="no records/没有记录")
 		else:
 			reply_text = []
 			for i in data:
@@ -202,7 +203,6 @@ async def menu_callback(call: types.CallbackQuery):
 			if not reply_text: 
 				reply_text=["no records/没有记录"]
 			await bot.send_message(call.message.chat.id, text="\n".join(reply_text))
-
 
 	# posts
 	elif res in ["10", "11"]:
@@ -339,7 +339,7 @@ async def menu_callback(call: types.CallbackQuery):
 			await bot.send_message(chat_id, text=config.lang["cn"]["department_ls"])
 
 	# check employees list by departments
-	if res in employees_ls.keys():
+	elif res in employees_ls.keys():
 		tmp_res, data = model.user_list(department_id=employees_ls[res])
 		reply_text = []
 		for i in data:

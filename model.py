@@ -8,7 +8,8 @@ def connection():
 			password=database['password'],
 			database=database['database'],
 			charset=database['charset'],
-			cursorclass=pymysql.cursors.DictCursor)
+			cursorclass=pymysql.cursors.DictCursor,
+			autocommit=True)
 	except Exception as e:
 		raise e
 
