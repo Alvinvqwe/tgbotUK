@@ -351,7 +351,7 @@ async def menu_callback(call: types.CallbackQuery):
 
 	else:
 		print(await isAdmin(data=call)) # direct to the section configs 
-# print(await isAdmin(data=call))
+		# print(await isAdmin(data=call))
 		title, cfg = render_menu(callback_data['menu_id'], action=1, lang_set=lang, isAdmin=await isAdmin(data=call))
 		back = 0 if title in [config.lang["cn"]["menu"], config.lang["en"]["menu"]] else 1
 		keyboard = menu_keyboard(config=cfg, index=res, lang=lang, back=back, action=1)
@@ -389,11 +389,11 @@ async def lang_set(message):
 	# finally:
 	await bot.send_message(chat_id, text=config.lang[dics[message.text]]["lang_set_succeed"])
 	# send the funcs menu by lang selected
-	cfg = render_menu(config.menu, action=0, lang_set=user["lang"], isAdmin=await isAdmin(data=message))
-	# cfg = config.menu
+	## title, cfg = render_menu(config.menu, action=0, lang_set=user["lang"], isAdmin=await isAdmin(data=message))
+	cfg = config.menu
 	# res_tmp = await isAdmin(data=message)
-	# if res_tmp:
-	# 	cfg[4]["Enable"] = True
+	cfg[4]["Enable"] = True if await isAdmin(data=message) else False
+		# cfg[4]["Enable"] = True
 	await bot.send_message(message.chat.id, text=config.lang[dics[message.text]]["menu"], 
 		reply_markup=menu_keyboard(config=cfg, index="0", lang=dics[message.text], back=0, action=1))
 
@@ -548,7 +548,12 @@ async def greeting(message):
 async def menu_command_handler(message: types.Message):
 	res, user = await auth(data=message)
 	if not res: return;
-	cfg = render_menu(config.menu, action=0, lang_set=user["lang"], isAdmin=await isAdmin(data=message))
+	## title, cfg = render_menu(config.menu, action=0, lang_set=user["lang"], isAdmin=await isAdmin(data=message))
+	cfg = config.menu
+	# res_tmp = await isAdmin(data=message)
+	cfg[4]["Enable"] = True if await isAdmin(data=message) else False
+		# cfg[4]["Enable"] = True
+
 	# cfg = config.menu
 	# if await isAdmin(data=message):
 	# 	cfg[4]["Enable"] = True
