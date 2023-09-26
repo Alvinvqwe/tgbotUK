@@ -86,7 +86,7 @@ def render_menu(menu_id, action=1, lang_set="en", isAdmin=False):
 	cfg = config.menu
 	if isAdmin:
 		cfg[4]["Enable"] = True
-	# print("menu_id: ", menu_id)
+	else: cfg[4]["Enable"] = False  #print("isAdmin: ", isAdmin)
 	if action:
 		# action in
 		for i in menu_id:
@@ -184,18 +184,17 @@ async def menu_callback(call: types.CallbackQuery):
 	elif res in ["00"]:
 		web_app = types.WebAppInfo(url='https://www.tgbotuktrinity.space/?'+"chatid="+str(call.message.chat.id))
 		# print(web_app)
-		button_c_in = types.InlineKeyboardButton('clock', web_app=web_app)
+		button_c_in = types.InlineKeyboardButton('点击打卡', web_app=web_app)
 		keyboard = types.InlineKeyboardMarkup()
 		keyboard.add(button_c_in)
-		await bot.send_message(call.message.chat.id, text='clock link/打卡链接', reply_markup=keyboard)
+		await bot.send_message(call.message.chat.id, text='请点击下方打卡链接', reply_markup=keyboard)
 
 	elif res in ["011", "012"]:
 		range_ = "month" if res == "012" else "day"
 		tmp_res, data = model.clock_check(user["idemployee"], range_=range_)
-
 		if not tmp_res:
 			# 无记录
-			await bot.send_message(call.message.chat.id, text="no records/没有记录")
+			await bot.send_message(call.message.chat.id, text="no records" + "/没有记录")
 		else:
 			reply_text = []
 			for i in data:
@@ -203,6 +202,7 @@ async def menu_callback(call: types.CallbackQuery):
 			if not reply_text: 
 				reply_text=["no records/没有记录"]
 			await bot.send_message(call.message.chat.id, text="\n".join(reply_text))
+
 
 	# posts
 	elif res in ["10", "11"]:
@@ -339,7 +339,7 @@ async def menu_callback(call: types.CallbackQuery):
 			await bot.send_message(chat_id, text=config.lang["cn"]["department_ls"])
 
 	# check employees list by departments
-	elif res in employees_ls.keys():
+	if res in employees_ls.keys():
 		tmp_res, data = model.user_list(department_id=employees_ls[res])
 		reply_text = []
 		for i in data:
@@ -350,7 +350,8 @@ async def menu_callback(call: types.CallbackQuery):
 		await bot.send_message(call.message.chat.id, text="\n".join(reply_text))
 
 	else:
-		# direct to the section configs
+		print(await isAdmin(data=call)) # direct to the section configs 
+# print(await isAdmin(data=call))
 		title, cfg = render_menu(callback_data['menu_id'], action=1, lang_set=lang, isAdmin=await isAdmin(data=call))
 		back = 0 if title in [config.lang["cn"]["menu"], config.lang["en"]["menu"]] else 1
 		keyboard = menu_keyboard(config=cfg, index=res, lang=lang, back=back, action=1)
@@ -388,16 +389,31 @@ async def lang_set(message):
 	# finally:
 	await bot.send_message(chat_id, text=config.lang[dics[message.text]]["lang_set_succeed"])
 	# send the funcs menu by lang selected
-	cfg = config.menu
-	res_tmp = await isAdmin(data=message)
-	if res_tmp:
-		cfg[4]["Enable"] = True
+	cfg = render_menu(config.menu, action=0, lang_set=user["lang"], isAdmin=await isAdmin(data=message))
+	# cfg = config.menu
+	# res_tmp = await isAdmin(data=message)
+	# if res_tmp:
+	# 	cfg[4]["Enable"] = True
 	await bot.send_message(message.chat.id, text=config.lang[dics[message.text]]["menu"], 
 		reply_markup=menu_keyboard(config=cfg, index="0", lang=dics[message.text], back=0, action=1))
 
 
 ########################## 
 # commands list
+@bot.message_handler(commands=["clock"])
+async def clock_command_handler(message):
+	web_app = types.WebAppInfo(url='https://www.tgbotuktrinity.space/?'+"chatid="+str(message.from_user.id))
+	# print(web_app)
+	button_c_in = types.InlineKeyboardButton('点击打卡', web_app=web_app)
+	keyboard = types.InlineKeyboardMarkup()
+	keyboard.add(button_c_in)
+	await bot.send_message(message.from_user.id, text='请点击下方打卡链', reply_markup=keyboard)
+
+
+
+
+
+
 @bot.message_handler(commands=["update_user"])
 async def update_user_command_handler(message):
 	# res, user = await auth(data=message)
@@ -532,9 +548,10 @@ async def greeting(message):
 async def menu_command_handler(message: types.Message):
 	res, user = await auth(data=message)
 	if not res: return;
-	cfg = config.menu
-	if await isAdmin(data=message):
-		cfg[4]["Enable"] = True
+	cfg = render_menu(config.menu, action=0, lang_set=user["lang"], isAdmin=await isAdmin(data=message))
+	# cfg = config.menu
+	# if await isAdmin(data=message):
+	# 	cfg[4]["Enable"] = True
 	await bot.send_message(message.chat.id, text=config.lang[user["lang"]]["menu"], 
 		reply_markup=menu_keyboard(config=cfg, index="0", lang=user["lang"], back=0))
 
@@ -543,7 +560,6 @@ async def menu_command_handler(message: types.Message):
 bot.add_custom_filter(MenuCallbackFilter())
 import asyncio
 asyncio.run(bot.polling())
-
 
 
 

@@ -1,37 +1,37 @@
-import telebot
+# import telebot
 
-# 你的Telegram Bot的API令牌
-TOKEN = '6000416074:AAGD_1u1UaVIgn43Ld0BsGv1IpZcUc99qy8'
+# # 你的Telegram Bot的API令牌
+# TOKEN = '6000416074:AAGD_1u1UaVIgn43Ld0BsGv1IpZcUc99qy8'
 
-# 初始化Telegram Bot
-bot = telebot.TeleBot(TOKEN)
+# # 初始化Telegram Bot
+# bot = telebot.TeleBot(TOKEN)
 
-# 存储访客用户名的集合
-visitor_usernames = set()
+# # 存储访客用户名的集合
+# visitor_usernames = set()
 
-# 处理新消息
-@bot.message_handler(content_types=['text'])
-def handle_messages(message):
-    username = message.from_user.username
-    name = message.from_user.first_name
-    if message.from_user.last_name:
-        name = " ".join([message.from_user.first_name, message.from_user.last_name])
-    if username:
-        tmp_info = "|".join([username, name])
-        if tmp_info in visitor_usernames:
-            pass
-        else:
-            visitor_usernames.add(tmp_info)
-            print(tmp_info + " added", len(visitor_usernames))
-    bot.send_message(message.from_user.id, "username 已录入")
+# # 处理新消息
+# @bot.message_handler(content_types=['text'])
+# def handle_messages(message):
+#     username = message.from_user.username
+#     name = message.from_user.first_name
+#     if message.from_user.last_name:
+#         name = " ".join([message.from_user.first_name, message.from_user.last_name])
+#     if username:
+#         tmp_info = "|".join([username, name])
+#         if tmp_info in visitor_usernames:
+#             pass
+#         else:
+#             visitor_usernames.add(tmp_info)
+#             print(tmp_info + " added", len(visitor_usernames))
+#     bot.send_message(message.from_user.id, "username 已录入")
 
-# 启动Bot
-bot.polling(none_stop=True)
+# # 启动Bot
+# bot.polling(none_stop=True)
 
-# 在这里可以将visitor_usernames保存到文件，去重操作已经在set中自动完成
-with open('visitor_usernames.txt', 'a') as file:
-    for username in visitor_usernames:
-        file.write(username + '\n')
+# # 在这里可以将visitor_usernames保存到文件，去重操作已经在set中自动完成
+# with open('visitor_usernames.txt', 'a') as file:
+#     for username in visitor_usernames:
+#         file.write(username + '\n')
 
 
 
@@ -122,6 +122,46 @@ with open('visitor_usernames.txt', 'a') as file:
 #         print(tmpls)
 #         user_add(idemployee=tmpls[3], username=tmpls[0], firstname=" ", departmentID=dics[tmpls[2]], chatid=None, lastname=None, isAdmin=0, lang="en")
 
+
+
+
+
+
+
+
+# This is a set_my_commands example.
+# Press on [/] button in telegram client.
+# Important, to update the command menu, be sure to exit the chat with the bot and log in again
+# Important, command for chat_id and for group have a higher priority than for all
+
+import asyncio
+import telebot
+from telebot.async_telebot import AsyncTeleBot
+
+
+API_TOKEN = '5841535252:AAHiWiDLxTGwXvX-OVt7pWX5UtI40uWcgjA'
+bot = AsyncTeleBot(API_TOKEN)
+
+
+async def main():
+    # use in for delete with the necessary scope and language_code if necessary
+    await bot.delete_my_commands(scope=None, language_code=None)
+
+    await bot.set_my_commands(
+        commands=[
+            telebot.types.BotCommand("clock", "员工打卡链接"),
+            telebot.types.BotCommand("menu", "功能菜单"),
+        ],
+        # scope=telebot.types.BotCommandScopeChat(12345678)  # use for personal command menu for users
+        # scope=telebot.types.BotCommandScopeAllPrivateChats()  # use for all private chats
+    )
+    
+    cmd = await bot.get_my_commands(scope=None, language_code=None)
+    print([c.to_json() for c in cmd])
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
 
 
 
